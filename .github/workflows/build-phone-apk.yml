@@ -28,7 +28,7 @@ jobs:
       - name: Install Android SDK 36.1
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36.1"
+          sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36.1" "platforms;android-37"
 
       - name: Unpack BaykusNot
         run: |
@@ -42,7 +42,10 @@ jobs:
 
           p = Path("unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/app/build.gradle.kts")
           s = p.read_text(encoding="utf-8")
-
+s = s.replace(
+    'compileSdk { version = release(36) { minorApiLevel = 1 } }',
+    'compileSdk = 37'
+)
           replacements = {
               "java.security.MessageDigest": "JavaMessageDigest",
               "java.net.URI": "JavaURI",
