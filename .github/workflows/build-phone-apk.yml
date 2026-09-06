@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -34,6 +34,41 @@ jobs:
         run: |
           unzip -q BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY.zip -d unpacked
           test -f unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/gradlew
+
+      - name: Patch Gradle Kotlin DSL
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/app/build.gradle.kts")
+          s = p.read_text(encoding="utf-8")
+
+          imports = """import java.net.URI
+          import java.security.KeyFactory
+          import java.security.MessageDigest
+          import java.security.Signature
+          import java.security.spec.X509EncodedKeySpec
+          import java.util.Base64
+
+          """
+
+          if "import java.net.URI" not in s:
+              s = imports + s
+
+          replacements = {
+              "java.security.MessageDigest": "MessageDigest",
+              "java.net.URI": "URI",
+              "java.security.KeyFactory": "KeyFactory",
+              "java.security.spec.X509EncodedKeySpec": "X509EncodedKeySpec",
+              "java.security.Signature": "Signature",
+              "java.util.Base64": "Base64",
+          }
+
+          for old, new in replacements.items():
+              s = s.replace(old, new)
+
+          p.write_text(s, encoding="utf-8")
+          PY
 
       - name: Build APK
         working-directory: unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY
