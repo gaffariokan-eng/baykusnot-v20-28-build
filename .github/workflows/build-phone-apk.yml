@@ -42,10 +42,8 @@ jobs:
 
           p = Path("unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/app/build.gradle.kts")
           s = p.read_text(encoding="utf-8")
-s = s.replace(
-    'compileSdk { version = release(36) { minorApiLevel = 1 } }',
-    'compileSdk = 37'
-)
+             s = s.replace('compileSdk { version = release(36) { minorApiLevel = 1 } }', 'compileSdk = 37')
+
           replacements = {
               "java.security.MessageDigest": "JavaMessageDigest",
               "java.net.URI": "JavaURI",
