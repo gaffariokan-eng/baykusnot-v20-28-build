@@ -43,30 +43,28 @@ jobs:
           p = Path("unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/app/build.gradle.kts")
           s = p.read_text(encoding="utf-8")
 
-          imports = """import java.net.URI
-          import java.security.KeyFactory
-          import java.security.MessageDigest
-          import java.security.Signature
-          import java.security.spec.X509EncodedKeySpec
-          import java.util.Base64
-
-          """
-
-          if "import java.net.URI" not in s:
-              s = imports + s
-
           replacements = {
-              "java.security.MessageDigest": "MessageDigest",
-              "java.net.URI": "URI",
-              "java.security.KeyFactory": "KeyFactory",
-              "java.security.spec.X509EncodedKeySpec": "X509EncodedKeySpec",
-              "java.security.Signature": "Signature",
-              "java.util.Base64": "Base64",
+              "java.security.MessageDigest": "JavaMessageDigest",
+              "java.net.URI": "JavaURI",
+              "java.security.KeyFactory": "JavaKeyFactory",
+              "java.security.spec.X509EncodedKeySpec": "JavaX509EncodedKeySpec",
+              "java.security.Signature": "JavaSignature",
+              "java.util.Base64": "JavaBase64",
           }
 
           for old, new in replacements.items():
               s = s.replace(old, new)
 
+          imports = """import java.net.URI as JavaURI
+          import java.security.KeyFactory as JavaKeyFactory
+          import java.security.MessageDigest as JavaMessageDigest
+          import java.security.Signature as JavaSignature
+          import java.security.spec.X509EncodedKeySpec as JavaX509EncodedKeySpec
+          import java.util.Base64 as JavaBase64
+
+          """
+
+          s = imports + s
           p.write_text(s, encoding="utf-8")
           PY
 
