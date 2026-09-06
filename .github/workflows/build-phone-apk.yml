@@ -1,8 +1,10 @@
-name: BaykusNot V20.28 APK
+name: BaykusNot V20.29 APK
 
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -25,78 +27,48 @@ jobs:
       - name: Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK 36.1
+      - name: Install SDK
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36.1" "platforms;android-37"
+          sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36.1"
 
-      - name: Unpack BaykusNot
+      - name: Unpack source
         run: |
-          unzip -q BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY.zip -d unpacked
-          test -f unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/gradlew
-
-      - name: Patch Gradle Kotlin DSL
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          p = Path("unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/app/build.gradle.kts")
-          s = p.read_text(encoding="utf-8")
-             s = s.replace('compileSdk { version = release(36) { minorApiLevel = 1 } }', 'compileSdk = 37')
-
-          replacements = {
-              "java.security.MessageDigest": "JavaMessageDigest",
-              "java.net.URI": "JavaURI",
-              "java.security.KeyFactory": "JavaKeyFactory",
-              "java.security.spec.X509EncodedKeySpec": "JavaX509EncodedKeySpec",
-              "java.security.Signature": "JavaSignature",
-              "java.util.Base64": "JavaBase64",
-          }
-
-          for old, new in replacements.items():
-              s = s.replace(old, new)
-
-          imports = """import java.net.URI as JavaURI
-          import java.security.KeyFactory as JavaKeyFactory
-          import java.security.MessageDigest as JavaMessageDigest
-          import java.security.Signature as JavaSignature
-          import java.security.spec.X509EncodedKeySpec as JavaX509EncodedKeySpec
-          import java.util.Base64 as JavaBase64
-
-          """
-
-          s = imports + s
-          p.write_text(s, encoding="utf-8")
-          PY
+          rm -rf unpacked
+          mkdir unpacked
+          unzip -q BaykusNot_V20_29_REAL_ANDROID_BUILD_HARDENED_SOURCE.zip -d unpacked
+          PROJECT_DIR="$(dirname "$(find unpacked -type f -name gradlew -print -quit)")"
+          test -n "$PROJECT_DIR"
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Build APK
-        working-directory: unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY
         run: |
+          cd "$PROJECT_DIR"
           chmod +x gradlew
           ./gradlew --no-daemon --stacktrace clean :app:assembleDebug
 
       - name: Prepare APK
         run: |
-          cp unpacked/BaykusNot_V20_28_GITHUB_PHONE_BUILD_READY/app/build/outputs/apk/debug/app-debug.apk BaykusNot-V20.28-TELEFONA-KUR.apk
-          sha256sum BaykusNot-V20.28-TELEFONA-KUR.apk > BaykusNot-V20.28-TELEFONA-KUR.apk.sha256.txt
-          unzip -t BaykusNot-V20.28-TELEFONA-KUR.apk >/dev/null
+          cp "$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk" BaykusNot-V20.29-TELEFONA-KUR.apk
+          sha256sum BaykusNot-V20.29-TELEFONA-KUR.apk > BaykusNot-V20.29-TELEFONA-KUR.apk.sha256.txt
+          unzip -t BaykusNot-V20.29-TELEFONA-KUR.apk >/dev/null
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: BaykusNot-V20.28-TELEFONA-KUR
+          name: BaykusNot-V20.29-TELEFONA-KUR
           path: |
-            BaykusNot-V20.28-TELEFONA-KUR.apk
-            BaykusNot-V20.28-TELEFONA-KUR.apk.sha256.txt
+            BaykusNot-V20.29-TELEFONA-KUR.apk
+            BaykusNot-V20.29-TELEFONA-KUR.apk.sha256.txt
 
       - name: Publish APK
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v20.28-phone-${GITHUB_RUN_NUMBER}"
+          TAG="v20.29-phone-${GITHUB_RUN_NUMBER}"
           gh release create "$TAG" \
-            BaykusNot-V20.28-TELEFONA-KUR.apk \
-            BaykusNot-V20.28-TELEFONA-KUR.apk.sha256.txt \
+            BaykusNot-V20.29-TELEFONA-KUR.apk \
+            BaykusNot-V20.29-TELEFONA-KUR.apk.sha256.txt \
             --target "$GITHUB_SHA" \
-            --title "BaykusNot V20.28 - Telefona Kur" \
-            --notes "BaykusNot V20.28 kurulabilir Android test APK."
+            --title "BaykusNot V20.29 - Telefona Kur" \
+            --notes "BaykusNot V20.29 kurulabilir Android debug APK."
